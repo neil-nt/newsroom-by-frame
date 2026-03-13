@@ -1,5 +1,7 @@
 import { OnboardWizard } from "./onboard-wizard";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "New Client — Newsroom",
 };
