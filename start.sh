@@ -1,8 +1,5 @@
 #!/bin/sh
-# Run migrations and seed if database doesn't exist
-if [ ! -f ./dev.db ]; then
-  echo "No database found, running migrations and seed..."
-  npx prisma migrate deploy
-  npx prisma db seed
-fi
+# Use the bundled database (copied from repo during Docker build)
+# Run migrations to ensure schema is up to date
+npx prisma migrate deploy 2>/dev/null || true
 npm run start
