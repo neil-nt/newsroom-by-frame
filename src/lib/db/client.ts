@@ -3,7 +3,7 @@ import { PrismaLibSql } from "@prisma/adapter-libsql";
 import path from "node:path";
 
 function createPrismaClient() {
-  let dbUrl = process.env.DATABASE_URL!;
+  let dbUrl = process.env.DATABASE_URL || "file:./dev.db";
   if (dbUrl.startsWith("file:./") || dbUrl.startsWith("file:../")) {
     const filePath = dbUrl.replace("file:", "");
     dbUrl = "file:" + path.resolve(filePath);
