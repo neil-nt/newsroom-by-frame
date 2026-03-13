@@ -4,11 +4,18 @@ import path from "node:path";
 
 function createPrismaClient() {
   let dbUrl = process.env.DATABASE_URL || "file:./dev.db";
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+
+  // Resolve relative file paths to absolute
   if (dbUrl.startsWith("file:./") || dbUrl.startsWith("file:../")) {
     const filePath = dbUrl.replace("file:", "");
     dbUrl = "file:" + path.resolve(filePath);
   }
-  const adapter = new PrismaLibSql({ url: dbUrl });
+
+  const adapter = authToken
+    ? new PrismaLibSql({ url: dbUrl, authToken })
+    : new PrismaLibSql({ url: dbUrl });
+
   return new PrismaClient({ adapter });
 }
 
