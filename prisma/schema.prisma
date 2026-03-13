@@ -1,0 +1,308 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ─── Clients ─────────────────────────────────────────────
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logoUrl   String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  context      ClientContext?
+  sources      Source[]
+  alerts       Alert[]
+  competitors  Competitor[]
+  spokespeople Spokesperson[]
+  topics       Topic[]
+  whiteSpaceRuns WhiteSpaceRun[]
+}
+
+model ClientContext {
+  id               String @id @default(cuid())
+  clientId         String @unique
+  client           Client @relation(fields: [clientId], references: [id])
+
+  positioning      String
+  messagePillars   String
+  toneOfVoice      String
+  toneExamples     String
+  avoidTopics      String
+  dataPoints       String
+  responseTemplates String
+  brandAliases      String   @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Spokesperson {
+  id        String @id @default(cuid())
+  clientId  String
+  client    Client @relation(fields: [clientId], references: [id])
+
+  name      String
+  role      String
+  expertise String
+  mediaStyle String?
+  bio       String?
+  active    Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Competitor {
+  id        String @id @default(cuid())
+  clientId  String
+  client    Client @relation(fields: [clientId], references: [id])
+
+  name      String
+  position  String
+  messaging String
+  strengths String
+  weaknesses String
+  trackUrls  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Topic {
+  id        String @id @default(cuid())
+  clientId  String
+  client    Client @relation(fields: [clientId], references: [id])
+
+  name      String
+  authority String
+  keywords  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Sources ─────────────────────────────────────────────
+
+model Source {
+  id        String @id @default(cuid())
+  clientId  String
+  client    Client @relation(fields: [clientId], references: [id])
+
+  name      String
+  type      String
+  url       String?
+  config    String?
+  category  String
+  active    Boolean @default(true)
+  lastFetchedAt DateTime?
+
+  rawItems  RawItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Ingestion Pipeline ──────────────────────────────────
+
+model RawItem {
+  id        String @id @default(cuid())
+  sourceId  String
+  source    Source @relation(fields: [sourceId], references: [id])
+
+  externalId String?
+  title      String
+  content    String?
+  url        String?
+  author     String?
+  publishedAt DateTime?
+  rawData    String?
+
+  status     String  @default("pending")
+  relevanceScore Float?
+
+  alert      Alert?
+
+  createdAt  DateTime @default(now())
+
+  @@unique([sourceId, externalId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ─── Outputs ─────────────────────────────────────────────
+
+model Alert {
+  id        String @id @default(cuid())
+  clientId  String
+  client    Client @relation(fields: [clientId], references: [id])
+
+  rawItemId String? @unique
+  rawItem   RawItem? @relation(fields: [rawItemId], references: [id])
+
+  type      String
+  urgency   String
+  category  String?
+
+  title         String
+  summary       String
+  whyItMatters  String
+  draftResponse String?
+  spokesperson  String?
+  targetMedia   String?
+  dataPoints    String?
+  confidence    Float?
+
+  sourceUrl     String?
+  publishedAt   DateTime?
+
+  status        String  @default("new")
+  feedback      String?
+  feedbackNote  String?
+
+  outcome       String?
+  outcomeNote   String?
+  outcomeDate   DateTime?
+  coverageUrl   String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([clientId, type])
+  @@index([clientId, status])
+  @@index([createdAt])
+}
+
+// ─── Trend Tracking ──────────────────────────────────────
+
+model TrendSnapshot {
+  id        String @id @default(cuid())
+  clientId  String
+
+  topic     String
+  volume    Int
+  velocity  Float
+  sentiment Float?
+  sources   String
+  period    String
+
+  createdAt DateTime @default(now())
+
+  @@index([clientId, topic])
+  @@index([createdAt])
+}
+
+// ─── White Space Analysis ───────────────────────────────
+
+model WhiteSpaceRun {
+  id        String @id @default(cuid())
+  clientId  String
+  client    Client @relation(fields: [clientId], references: [id])
+
+  metadata  String // JSON blob of metadata
+
+  opportunities WhiteSpaceOpp[]
+
+  createdAt DateTime @default(now())
+
+  @@index([clientId])
+  @@index([createdAt])
+}
+
+model WhiteSpaceOpp {
+  id        String @id @default(cuid())
+  runId     String
+  run       WhiteSpaceRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  topic     String
+  opportunity String
+  suggestedHeadline String
+  score     Float
+  timing    String
+  triggerType String
+
+  theGap    String
+  yourAdvantage String
+  theWindow String
+
+  evidenceSources String // JSON
+  calendarEvent String?
+  calendarDate  String?
+  competitorSilence String
+  actionSteps String // JSON
+  pitchAngle String
+  spokespersonBrief String
+  spokesperson String?
+  pitchTo String // JSON
+  relevantDataPoints String // JSON
+
+  status    String @default("new") // new, reviewed, pitched, covered, archived
+  statusNote String?
+  statusDate DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([runId])
+  @@index([status])
+}
+
+// ─── Sentiment Tracking ─────────────────────────────────
+
+model SentimentSnapshot {
+  id        String @id @default(cuid())
+  clientId  String
+
+  date      DateTime
+  topic     String
+  avgSentiment Float
+  volume    Int
+  sources   String // JSON array of source names
+
+  createdAt DateTime @default(now())
+
+  @@index([clientId, date])
+  @@index([clientId, topic])
+}
+
+// ─── Cached Panel Reports ────────────────────────────────
+
+model CachedReport {
+  id        String @id @default(cuid())
+  clientId  String
+  type      String // "citations", "journo_requests", "sov"
+
+  data      String // JSON blob of the full report/results
+
+  createdAt DateTime @default(now())
+
+  @@unique([clientId, type])
+  @@index([clientId])
+}
+
+// ─── Journalist Database ────────────────────────────────
+
+model Journalist {
+  id        String @id @default(cuid())
+  name      String
+  outlet    String?
+  email     String?
+  beat      String? // topics they cover
+  articleCount Int @default(0)
+  lastSeenAt DateTime?
+  notes     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, outlet])
+  @@index([outlet])
+}
