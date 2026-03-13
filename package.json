@@ -30,6 +30,9 @@
     "tailwind-merge": "^3.5.0",
     "zod": "^4.3.6"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
