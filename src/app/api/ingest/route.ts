@@ -7,6 +7,9 @@ import { runPipelineForClient, runPipelineForAllClients } from "@/lib/ingestion/
  * Body: { clientId?: string } -- if no clientId, runs for all clients.
  */
 export async function POST(request: NextRequest) {
+  // Ingestion disabled for hosted demo — run locally to update data
+  return NextResponse.json({ success: false, error: "Ingestion is disabled in demo mode. Contact admin to refresh data." }, { status: 403 });
+
   try {
     const body = await request.json().catch(() => ({}));
     const { clientId } = body as { clientId?: string };

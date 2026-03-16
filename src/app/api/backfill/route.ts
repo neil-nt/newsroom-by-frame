@@ -18,6 +18,9 @@ interface BrandStats {
 }
 
 export async function POST(request: NextRequest) {
+  // Backfill disabled for hosted demo — long-running and hits external APIs
+  return NextResponse.json({ success: false, error: "Backfill is currently disabled" }, { status: 403 });
+
   try {
     const body = await request.json().catch(() => ({}));
     const { clientId } = body as { clientId?: string };

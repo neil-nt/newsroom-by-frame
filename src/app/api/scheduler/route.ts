@@ -23,9 +23,8 @@ function ensureStarted() {
  * Returns current scheduler status.
  */
 export async function GET() {
-  ensureStarted();
-  const status = getSchedulerStatus();
-  return NextResponse.json(status);
+  // Scheduler disabled for hosted demo
+  return NextResponse.json({ initialized: false, jobs: [], message: "Scheduler disabled in hosted mode" });
 }
 
 /**
@@ -34,7 +33,8 @@ export async function GET() {
  * Body: { action: "start" | "stop" | "trigger", job?: "ingestion" | "backfill" }
  */
 export async function POST(request: NextRequest) {
-  ensureStarted();
+  // Scheduler disabled for hosted demo
+  return NextResponse.json({ success: false, error: "Scheduler disabled in hosted mode" }, { status: 403 });
 
   try {
     const body = await request.json();
